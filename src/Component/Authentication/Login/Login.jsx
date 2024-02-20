@@ -1,6 +1,6 @@
 import { Button, Form, Input, message } from "antd";
 import axios from "axios"; // Import axios for making HTTP requests
-import { useContext, useEffect, useState } from "react";
+import { useContext } from "react";
 import { NavLink, useLocation, useNavigate, useNavigation } from "react-router-dom";
 import { AuthContext } from "../../../Provider/Authprovider";
 import { validateEmail } from "../../../lib/utils";
@@ -8,27 +8,11 @@ import SocialLogin from "../SocialLogin/SocialLogin";
 import "./Login.css";
 
 const Login = () => {
-	const { googleSignIn, setUser, login } = useContext(AuthContext);
+	const { googleSignIn, login } = useContext(AuthContext);
 	const navigate = useNavigate();
 	const navigation = useNavigation();
 	const location = useLocation();
 	const from = location.state?.from?.pathname || "/";
-	const [allUser, setAllUser] = useState([]);
-
-	useEffect(() => {
-		// Function to fetch all users from the server
-		const fetchAllUsers = async () => {
-			try {
-				const response = await axios.get("http://localhost:5000/user");
-				setAllUser(response.data);
-				console.log(response);
-			} catch (error) {
-				console.error("Error fetching users:", error);
-			}
-		};
-
-		fetchAllUsers();
-	}, []);
 
 	if (navigation.state === "loading") {
 		return <progress className='progress w-56'></progress>;
@@ -37,9 +21,6 @@ const Login = () => {
 	const onFinish = async ({ email, password }) => {
 		try {
 			login(email, password);
-			const foundUser = allUser.find(user => user.email === email);
-			setUser(foundUser);
-			message.success("Login successful");
 			navigate("/");
 		} catch (error) {
 			console.error("Login failed:", error);
@@ -48,6 +29,7 @@ const Login = () => {
 
 	const onFinishFailed = errorInfo => {
 		console.log("Failed:", errorInfo);
+		message.error("Something went wrong!");
 	};
 
 	const handleGoogle = () => {

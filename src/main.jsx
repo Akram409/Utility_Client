@@ -5,7 +5,6 @@ import { AllProvider } from "./Component/Context/AllContext";
 import { router } from "./Component/Router/Router";
 import AuthProvider from "./Provider/Authprovider";
 import "./index.css";
-// import AuthProvider from "./Provider/Authprovider";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
 	<React.StrictMode>

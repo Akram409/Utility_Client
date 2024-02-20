@@ -34,10 +34,9 @@ const Signup = () => {
 			console.log(response);
 			// Set the user in AuthContext after successful signup
 			setUser(response.data.user);
-
 			// Display success message using Ant Design message component
 			message.success("Signup successful");
-			navigate("/login", { replace: true });
+			navigate("/", { replace: true });
 		} catch (error) {
 			console.error("Signup failed:", error?.response?.data?.error);
 			// Display error message using Ant Design message component
@@ -47,6 +46,7 @@ const Signup = () => {
 
 	const onFinishFailed = errorInfo => {
 		console.log("Failed:", errorInfo);
+		message.error("Something went wrong!");
 	};
 
 	const handleGoogle = () => {

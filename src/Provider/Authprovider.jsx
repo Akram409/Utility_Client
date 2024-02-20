@@ -1,3 +1,4 @@
+import { message } from "antd";
 import axios from "axios";
 import {
 	GoogleAuthProvider,
@@ -7,6 +8,7 @@ import {
 	signInWithEmailAndPassword,
 	signInWithPopup,
 	signOut,
+	updatePassword,
 } from "firebase/auth";
 import { createContext, useEffect, useState } from "react";
 import { app } from "../firebase/firebase.config";
@@ -19,34 +21,12 @@ const auth = getAuth(app);
 const AuthProvider = ({ children }) => {
 	const [user, setUser] = useState(null);
 	const [loading, setLoading] = useState(true);
-
 	const googleProvider = new GoogleAuthProvider();
 
 	const googleSignIn = () => {
 		setLoading(true);
-		return signInWithPopup(auth, googleProvider);
+		return signInWithPopup(auth, googleProvider).finally(() => setLoading(false));
 	};
-
-	// useEffect(() => {
-	// 	// Check if user is logged in
-	// 	const token = localStorage.getItem("access-token");
-	// 	if (token) {
-	// 		// Verify token on the server
-	// 		axios
-	// 			.post("http://localhost:5000/verifyToken", { token })
-	// 			.then(() => {
-	// 				setUser({ token });
-	// 			})
-	// 			.catch(() => {
-	// 				localStorage.removeItem("token");
-	// 			})
-	// 			.finally(() => {
-	// 				setLoading(false);
-	// 			});
-	// 	} else {
-	// 		setLoading(false);
-	// 	}
-	// }, []);
 
 	const logOut = () => {
 		setLoading(true);
@@ -65,61 +45,54 @@ const AuthProvider = ({ children }) => {
 
 	const login = async (email, password) => {
 		try {
-			// Sign in with Firebase
+			setLoading(true);
 			const userCredential = await signInWithEmailAndPassword(auth, email, password);
-
-			console.log(userCredential);
-
 			// Send login request to backend
-			const response = await axios.post("http://localhost:5000/login", {
+			await axios.post("http://localhost:5000/login", {
 				email,
 				password,
 			});
-
-			// Store access token and update user state
-			const { token } = response.data;
-			localStorage.setItem("access-token", token);
-			setUser({ token });
+			setUser(userCredential.user);
+			message.success("Login successful");
 		} catch (error) {
-			// Handle Firebase and API errors
 			console.error("Login error:", error);
-			// Display an appropriate error message to the user
+			message.error(error.message);
+		} finally {
+			setLoading(false);
 		}
 	};
 
 	const signup = async userData => {
 		const { password, email } = userData;
 		try {
-			// Create a new user with email and password in Firebase
+			setLoading(true);
 			const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-			const user = userCredential.user;
-			console.log(user);
+			setUser(userCredential.user);
 		} catch (error) {
-			// Handle Firebase and API errors
-			console.error("Login error:", error);
-			// Display an appropriate error message to the user
+			console.error("Signup error:", error);
+			// Handle error
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const updateUserPassword = async password => {
+		try {
+			setLoading(true);
+			await updatePassword(auth.currentUser, password);
+			setLoading(false);
+		} catch (error) {
+			console.error("Error updating password:", error);
+			// Handle error, such as displaying a message to the user
 		}
 	};
 
 	useEffect(() => {
 		const unsubscribe = onAuthStateChanged(auth, currentUser => {
 			setUser(currentUser);
-			// if (currentUser) {
-			//   axios
-			//     .post("http://localhost:5000/jwt", {
-			//       email: currentUser.email,
-			//     })
-			//     .then((data) => {
-			//       localStorage.setItem("access-token", data.data.token);
-			//       setLoading(false);
-			//     });
-			// } else {
-			//   localStorage.removeItem("access-token");
-			// }
+			setLoading(false);
 		});
-		return () => {
-			return unsubscribe();
-		};
+		return unsubscribe;
 	}, []);
 
 	const authInfo = {
@@ -130,6 +103,7 @@ const AuthProvider = ({ children }) => {
 		logOut,
 		googleSignIn,
 		signup,
+		updateUserPassword,
 	};
 
 	return <AuthContext.Provider value={authInfo}>{children}</AuthContext.Provider>;
