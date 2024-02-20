@@ -21,6 +21,7 @@ const Login = () => {
 			try {
 				const response = await axios.get("http://localhost:5000/user");
 				setAllUser(response.data);
+				console.log(response);
 			} catch (error) {
 				console.error("Error fetching users:", error);
 			}
@@ -36,10 +37,8 @@ const Login = () => {
 	const onFinish = async ({ email, password }) => {
 		try {
 			login(email, password);
-
-			const foundUser = allUser.find(u => u.email === email);
+			const foundUser = allUser.find(user => user.email === email);
 			setUser(foundUser);
-
 			message.success("Login successful");
 			navigate("/");
 		} catch (error) {

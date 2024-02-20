@@ -1,8 +1,10 @@
 import axios from "axios";
 import {
 	GoogleAuthProvider,
+	createUserWithEmailAndPassword,
 	getAuth,
 	onAuthStateChanged,
+	signInWithEmailAndPassword,
 	signInWithPopup,
 	signOut,
 } from "firebase/auth";
@@ -25,32 +27,32 @@ const AuthProvider = ({ children }) => {
 		return signInWithPopup(auth, googleProvider);
 	};
 
-	useEffect(() => {
-		// Check if user is logged in
-		const token = localStorage.getItem("token");
-		if (token) {
-			// Verify token on the server
-			axios
-				.post("http://localhost:5000/verifyToken", { token })
-				.then(() => {
-					setUser({ token });
-				})
-				.catch(() => {
-					localStorage.removeItem("token");
-				})
-				.finally(() => {
-					setLoading(false);
-				});
-		} else {
-			setLoading(false);
-		}
-	}, []);
+	// useEffect(() => {
+	// 	// Check if user is logged in
+	// 	const token = localStorage.getItem("access-token");
+	// 	if (token) {
+	// 		// Verify token on the server
+	// 		axios
+	// 			.post("http://localhost:5000/verifyToken", { token })
+	// 			.then(() => {
+	// 				setUser({ token });
+	// 			})
+	// 			.catch(() => {
+	// 				localStorage.removeItem("token");
+	// 			})
+	// 			.finally(() => {
+	// 				setLoading(false);
+	// 			});
+	// 	} else {
+	// 		setLoading(false);
+	// 	}
+	// }, []);
 
 	const logOut = () => {
 		setLoading(true);
 		signOut(auth)
 			.then(() => {
-				localStorage.removeItem("token");
+				localStorage.removeItem("access-token");
 				setUser(null);
 			})
 			.catch(error => {
@@ -63,13 +65,39 @@ const AuthProvider = ({ children }) => {
 
 	const login = async (email, password) => {
 		try {
-			const response = await axios.post("http://localhost:5000/login", { email, password });
+			// Sign in with Firebase
+			const userCredential = await signInWithEmailAndPassword(auth, email, password);
+
+			console.log(userCredential);
+
+			// Send login request to backend
+			const response = await axios.post("http://localhost:5000/login", {
+				email,
+				password,
+			});
+
+			// Store access token and update user state
 			const { token } = response.data;
-			// Store token in local storage
 			localStorage.setItem("access-token", token);
 			setUser({ token });
 		} catch (error) {
-			console.error("Login failed:", error);
+			// Handle Firebase and API errors
+			console.error("Login error:", error);
+			// Display an appropriate error message to the user
+		}
+	};
+
+	const signup = async userData => {
+		const { password, email } = userData;
+		try {
+			// Create a new user with email and password in Firebase
+			const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+			const user = userCredential.user;
+			console.log(user);
+		} catch (error) {
+			// Handle Firebase and API errors
+			console.error("Login error:", error);
+			// Display an appropriate error message to the user
 		}
 	};
 
@@ -101,6 +129,7 @@ const AuthProvider = ({ children }) => {
 		loading,
 		logOut,
 		googleSignIn,
+		signup,
 	};
 
 	return <AuthContext.Provider value={authInfo}>{children}</AuthContext.Provider>;

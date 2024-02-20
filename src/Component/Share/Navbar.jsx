@@ -28,8 +28,8 @@ const Navbar = () => {
 		logOut();
 	};
 
-	console.log(user);
-	console.log(currentUser?.role);
+	// console.log(user);
+	// console.log(currentUser?.role);
 	return (
 		<div>
 			<div className='navbar bg-black text-white md:px-10'>
