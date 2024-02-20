@@ -19,6 +19,7 @@ const Navbar = () => {
 				console.error("Error fetching users:", error);
 			}
 		};
+
 		// Call the fetchAllUsers function when the component mounts
 		fetchAllUsers();
 	}, [user]); // Empty dependency array ensures that this effect runs only once, on component mount
