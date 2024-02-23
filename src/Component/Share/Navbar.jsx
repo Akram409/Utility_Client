@@ -42,7 +42,7 @@ const Navbar = () => {
 							<li>Loading...</li>
 						) : (
 							<>
-								{!user && (
+								{!user ? (
 									<li>
 										<h1 className='italic'>
 											Login
@@ -54,6 +54,10 @@ const Navbar = () => {
 												Join us now!
 											</NavLink>
 										</h1>
+									</li>
+								) : (
+									<li>
+										<h1 className='italic select-none'>Welcome {user?.username}</h1>
 									</li>
 								)}
 								<li>
